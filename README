@@ -1,5 +1,28 @@
-######### Script para actualizar el canles y descripción ################
-Se solicita periodo para consultar en la base de datos el nombre de las clases
-Con el nombre de la clase de usa el API de Teams para obtener el ID de cada clase
-Con el Id de la clase en Teams lista los canales de cada clase, solo aquellos que tengan "Term" en el nombre y descripción
-Se obtiene el Id de cada canal para poder actualizar "Term" por "Module"
+# Teams Channel Updater – Term a Module
+
+Script automatizado para actualizar canales de Microsoft Teams que contienen la palabra "Term" en su nombre y descripción, reemplazándola por "Module". Utiliza un período como filtro para consultar una base de datos, obtener las clases correspondientes y luego interactuar con la API de Microsoft Graph.
+
+## 🚀 Funcionalidades
+
+- Solicita un período (ejemplo `2026-2026`) como filtro.
+- Consulta una base de datos configurable para obtener los nombres de las clases que cumplen con el período.
+- Obtiene el ID de Teams de cada clase mediante Microsoft Graph API.
+- Lista los canales de cada clase y detecta aquellos que contienen "Term" tanto en el nombre como en la descripción.
+- Reemplaza "Term" por "Module" en el nombre y la descripción de esos canales usando la API de Teams.
+
+## 📋 Requisitos previos
+
+- **Python 3.8 o superior**
+- Acceso a una base de datos (MySQL)
+- **Aplicación registrada en Azure AD** con los siguientes permisos de Microsoft Graph:
+  - `ChannelSettings.ReadWrite.All` (o `Group.ReadWrite.All` según el tipo de operación)
+  - `Team.ReadBasic.All` (para listar equipos)
+  - `User.Read.All` (si se usa autenticación delegada)
+- Variables de entorno configuradas con las credenciales de la BD y de Azure AD.
+
+## 📦 Instalación
+
+1. Clona este repositorio o copia los archivos en tu máquina local.
+   ```bash
+   git clone <url-del-repo>
+   cd teams-term-to-module
