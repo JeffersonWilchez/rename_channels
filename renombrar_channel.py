@@ -1,4 +1,5 @@
 import os
+import time
 import mysql.connector
 from requests import get as requests_get, patch as requests_patch, post as requests_post
 from dotenv import load_dotenv
@@ -146,6 +147,30 @@ def get_channel_id(token, id_teams):
     except Exception as e:
         print(f"Error al obtener los canales: {e}")
         return []
+
+def update_channel(token, id_teams, id_channel, current_name, current_description):
+    new_name = current_name.replace("Term", "Module")
+    new_description = current_description.replace("Term", "Module")
+
+    url = f"https://graph.microsoft.com/v1.0/teams/{id_teams}/channels/{id_channel}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "displayName": new_name,
+        "description": new_description
+    }
+
+    response = requests_patch(url, headers=headers, json=payload)
+
+    if response.status_code == 204:
+        print(f"Canal renombrado {current_name} a {new_name}")
+        return True
+
+    print(f"Error al renombrar el canal: {response.status_code}")
+    return False
+
             
 
 if __name__ == "__main__":
@@ -173,6 +198,10 @@ if __name__ == "__main__":
 
             for channel in channels:
                 print(f"Canal: {channel['name']} - {channel['description']} - ID: {channel['id']}")
+
+                time.sleep(1)
+
+                update_channel(token, id_teams, channel["id"], channel["name"], channel["description"])
                 
         except Exception as e:
             print(f"Error procesando {clase}: {e}")
