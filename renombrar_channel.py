@@ -2,7 +2,6 @@ import os
 import mysql.connector
 from requests import get as requests_get, patch as requests_patch, post as requests_post
 from dotenv import load_dotenv
-from urllib3 import response
 
 load_dotenv()
 
@@ -77,11 +76,15 @@ def get_token_teams():
         "scope": "https://graph.microsoft.com/.default"
     }
 
-    response = requests_post(url, data=payload)
-    if response.status_code == 200:
-        return response.json()["access_token"]
-    else:
-        print(f"Error al obtener el token: {response.status_code}")
+    try:
+        response = requests_post(url, data=payload)
+        if response.status_code == 200:
+            return response.json()["access_token"]
+        else:
+            print(f"Error al obtener el token: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"Error al obtener el token: {e}")
         return None
 
 def get_id_tems(token, clase):
@@ -91,18 +94,85 @@ def get_id_tems(token, clase):
         "Content-Type": "application/json"
     }
 
-    response = requests_get(url, headers=headers)
-    if response.status_code == 200:
-        print(f"ID de la clase: {response.json()['value'][0]['id']}")
-        return response.json()["value"][0]["id"]
-    else:
-        print(f"Error al obtener el id de la clase: {response.status_code} - {response.json()['error']['message']}")
+    try:
+        response = requests_get(url, headers=headers)
+
+        if response.status_code == 200:
+            print(f"ID de la clase: {response.json()['value'][0]['id']}")
+            teams = response.json().get("value", [])
+
+            if not teams:
+                print(f"No se encontró la clase {clase}")
+                return None
+
+            return teams[0]["id"]
+        else:
+            print(f"Error al obtener el id de la clase: {response.status_code} - {response.json()['error']['message']}")
+            return None
+    except Exception as e:
+        print(f"Error al obtener el id de la clase: {e}")
         return None
+
+def get_channel_id(token, id_teams):
+    url = f"https://graph.microsoft.com/v1.0/teams/{id_teams}/channels"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests_get(url, headers=headers)
+
+        if response.status_code != 200:
+            print(f"Error al obtener los canales: {id_teams} - {response.status_code}")
+            return []
+
+        channels = response.json().get("value", [])
+
+        term_channels = [
+            {
+                "id": channel["id"],
+                "name": channel["displayName"],
+                "description": channel["description"]
+            }
+            for channel in channels if channel["displayName"].startswith("Term")
+        ]
+
+        if not term_channels:
+            print(f"No se encontraton canales con Term en el nombre")
+            return []
+
+        return term_channels
+    except Exception as e:
+        print(f"Error al obtener los canales: {e}")
+        return []
+            
 
 if __name__ == "__main__":
     token = get_token_teams()
-    if token:
-        clases = get_clases()
-        if clases:
-            for clase in clases:
-                get_id_tems(token, clase)
+    if not token:
+        exit()
+
+    clases = get_clases()
+    if not clases:
+        exit()
+    
+    for clase in clases:
+        print(f"Procesando clase: {clase}")
+
+        try:
+            id_teams = get_id_tems(token, clase)
+            if not id_teams:
+                continue
+
+            channels = get_channel_id(token, id_teams)
+            if not channels:
+                continue
+
+            print(f"Canales encontrados: {len(channels)} para la clase {clase}")
+
+            for channel in channels:
+                print(f"Canal: {channel['name']} - {channel['description']} - ID: {channel['id']}")
+                
+        except Exception as e:
+            print(f"Error procesando {clase}: {e}")
