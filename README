@@ -1,0 +1,5 @@
+######### Script para actualizar el canles y descripción ################
+Se solicita periodo para consultar en la base de datos el nombre de las clases
+Con el nombre de la clase de usa el API de Teams para obtener el ID de cada clase
+Con el Id de la clase en Teams lista los canales de cada clase, solo aquellos que tengan "Term" en el nombre y descripción
+Se obtiene el Id de cada canal para poder actualizar "Term" por "Module"
